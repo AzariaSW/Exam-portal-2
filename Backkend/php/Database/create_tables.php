@@ -1,6 +1,8 @@
-CREATE DATABASE ExamPortal
+<?php
 
-CREATE TABLE quizzes (
+$conn = new mysqli("localhost", "root", "", "exam_portal");
+
+$sql = "CREATE TABLE quizzes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(255),
     description TEXT,
@@ -25,4 +27,14 @@ CREATE TABLE students (
     name VARCHAR(100),
     email VARCHAR(100),
     status VARCHAR(20) DEFAULT 'pending'
-);
+);";
+
+if ($conn->query($sql) === TRUE) {
+    echo "Table created successfully";
+} else {
+    echo "Error: " . $conn->error;
+}
+
+$conn->close();
+
+?>
