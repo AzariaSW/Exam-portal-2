@@ -1,14 +1,11 @@
 <?php
 session_start();
-require '../config/db.php'; // include the MySQLi connection
-
+require '../config/db.php'; 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim($_POST['name']);
     $email = trim($_POST['email']);
     $password = $_POST['password'];
     $role = $_POST['role'];
-
-    // Basic validation
     if (!$name || !$email || !$password) {
         echo json_encode(['error' => 'Please fill all fields']);
         exit;
@@ -19,27 +16,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // Check if email already exists
-    $stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    if ($result->num_rows > 0) {
-        echo json_encode(['error' => 'Email already registered']);
-        exit;
-    }
+    try {
+        $stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
+        $stmt->execute([$email]);
 
-    // Hash password
-    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+        if ($stmt->rowCount() > 0) {
+            echo json_encode(['error' => 'Email already registered']);
+            exit;
+        }
 
-    // Insert user
-    $stmt = $conn->prepare("INSERT INTO users (name, email, password, role, approved) VALUES (?, ?, ?, ?, ?)");
-    $approved = ($role === 'student') ? 0 : 1; // students need approval
-    $stmt->bind_param("ssssi", $name, $email, $hashedPassword, $role, $approved);
+        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
-    if ($stmt->execute()) {
-        echo json_encode(['success' => 'Account created']);
-    } else {
-        echo json_encode(['error' => 'Signup failed']);
+        $stmt = $conn->prepare("INSERT INTO users (name, email, password, role, approved) VALUES (?, ?, ?, ?, ?)");
+
+        $approved = ($role === 'student') ? 0 : 1; 
+
+        if ($stmt->execute([$name, $email, $hashedPassword, $role, $approved])) {
+            echo json_encode(['success' => 'Account created']);
+        } else {
+            echo json_encode(['error' => 'Signup failed']);
+        }
+
+    } catch (PDOException $e) {
+        echo json_encode(['error' => $e->getMessage()]);
     }
 }
