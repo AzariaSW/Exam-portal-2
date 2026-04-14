@@ -4,7 +4,6 @@ require_once __DIR__ . '/../config/db.php';
 
 header("Content-Type: application/json");
 
-// Only allow GET request
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     echo json_encode([
         "success" => false,
@@ -13,26 +12,22 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     exit;
 }
 
-$sql = "SELECT id, name, email, role, approved, created_at FROM users";
-$result = mysqli_query($conn, $sql);
+try {
+    $sql = "SELECT id, name, email, role, approved, created_at FROM users";
+    $stmt = $conn->prepare($sql);
+    $stmt->execute();
 
-if (!$result) {
+    $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    echo json_encode([
+        "success" => true,
+        "data" => $users
+    ]);
+
+} catch (PDOException $e) {
     echo json_encode([
         "success" => false,
-        "message" => "Database query failed"
+        "message" => "Database query failed",
+        "error" => $e->getMessage()
     ]);
-    exit;
 }
-
-$users = [];
-
-while ($row = mysqli_fetch_assoc($result)) {
-    $users[] = $row;
-}
-
-echo json_encode([
-    "success" => true,
-    "data" => $users
-]);
-
-?>
