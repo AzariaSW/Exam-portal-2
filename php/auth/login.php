@@ -1,11 +1,6 @@
 <?php
 session_start();
-
-$users = [
-    "student@test.com" => ["password" => "123456", "role" => "student"],
-    "teacher@test.com" => ["password" => "123456", "role" => "teacher"],
-    "admin@test.com"   => ["password" => "admin123", "role" => "admin"]
-];
+require 'config/db.php';
 
 $error = "";
 
@@ -15,13 +10,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = $_POST["password"];
     $role = $_POST["role"];
 
-    if (isset($users[$email])) {
+    // prepare query
+    $stmt = $conn->prepare("SELECT * FROM users WHERE email = :email AND role = :role");
+    $stmt->bindParam(":email", $email);
+    $stmt->bindParam(":role", $role);
+    $stmt->execute();
 
-        if ($users[$email]["password"] === $password && $users[$email]["role"] === $role) {
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            $_SESSION["user"] = $email;
-            $_SESSION["role"] = $role;
+    if ($user) {
 
+        // verify password
+        if (password_verify($password, $user["password"])) {
+
+            $_SESSION["user"] = $user["email"];
+            $_SESSION["role"] = $user["role"];
+
+            // redirect based on role
             if ($role == "student") {
                 header("Location: student_dashboard.php");
             } elseif ($role == "teacher") {
@@ -32,7 +37,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit();
 
         } else {
-            $error = "Invalid password or role!";
+            $error = "Invalid password!";
         }
 
     } else {
@@ -42,50 +47,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Login</title>
-
-<style>
-body {
-    font-family: Arial;
-    background: #f2f2f2;
-    text-align: center;
-}
-
-.container {
-    width: 300px;
-    margin: 100px auto;
-    padding: 20px;
-    background: white;
-    border-radius: 8px;
-}
-
-input, select {
-    width: 100%;
-    padding: 8px;
-    margin: 10px 0;
-}
-
-button {
-    padding: 10px;
-    width: 100%;
-    background: #007bff;
-    color: white;
-    border: none;
-}
-
-.error {
-    color: red;
-}
-</style>
-
 </head>
 <body>
 
-<div class="container">
 <h2>Login</h2>
 
 <form method="POST">
@@ -107,11 +74,7 @@ button {
 
 </form>
 
-<p style="color:red;">
-<?php echo $error; ?>
-</p>
-
-</div>
+<p style="color:red;"><?php echo $error; ?></p>
 
 </body>
 </html>
