@@ -1,47 +1,34 @@
 <?php
 
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once "../config/db.php";
 
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
-$dotenv->load();
+// APPROVE TEACHER 
 
-$conn = mysqli_connect(
-    $_ENV['DB_HOST'],
-    $_ENV['DB_USER'],
-    $_ENV['DB_PASS'],
-    $_ENV['DB_NAME']
-);
+if (isset($_GET['approve'])) {
 
-if (!$conn) {
-    die("Connection failed: " . mysqli_connect_error());
+    $teacher_id = $_GET['approve'];
+
+    $stmt = $pdo->prepare("UPDATE teachers SET status = 'approved' WHERE id = :id");
+
+    $stmt->execute([
+        ':id' => $teacher_id
+    ]);
 }
 
+// GET PENDING TEACHERS 
 
-//APPROVE TEACHER 
+$stmt = $pdo->prepare("SELECT * FROM teachers WHERE status = 'pending'");
+$stmt->execute();
 
-if(isset($_GET['approve'])){
-
-    $teacher_id = intval($_GET['approve']);
-
-    $query = "UPDATE teachers 
-              SET status='approved' 
-              WHERE id='$teacher_id'";
-
-    mysqli_query($conn,$query);
-}
-
-
-//get pending teachers for approval
-
-$query = "SELECT * FROM teachers WHERE status='pending'";
-$result = mysqli_query($conn,$query);
+$teachers = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 ?>
 
 <!DOCTYPE html>
 <html>
+
 <head>
-<title>Pending Teachers</title>
+<title>Approve Teachers</title>
 </head>
 
 <body>
@@ -57,31 +44,23 @@ $result = mysqli_query($conn,$query);
 <th>Action</th>
 </tr>
 
-<?php
-
-while($row = mysqli_fetch_assoc($result)){
-
-?>
+<?php foreach ($teachers as $row): ?>
 
 <tr>
 
-<td><?php echo $row['id']; ?></td>
-
-<td><?php echo $row['name']; ?></td>
-
-<td><?php echo $row['email']; ?></td>
+<td><?= $row['id'] ?></td>
+<td><?= $row['name'] ?></td>
+<td><?= $row['email'] ?></td>
 
 <td>
-<a href="approve_teacher.php?approve=<?php echo $row['id']; ?>">
+<a href="?approve=<?= $row['id'] ?>">
 Approve
 </a>
 </td>
 
 </tr>
 
-<?php
-}
-?>
+<?php endforeach; ?>
 
 </table>
 
