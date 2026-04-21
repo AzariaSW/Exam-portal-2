@@ -3,30 +3,26 @@
 header("Content-Type: application/json");
 
 require_once "../config/db.php";
-
+try{
 $sql = "SELECT id, name, email, approved 
         FROM users 
-        WHERE role='student'";
+        WHERE role= :role";
 
-$result = mysqli_query($conn, $sql);
+$stmt = $conn->prepare($sql);
+    $stmt->execute(['role' => 'student']);
+ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-if (!$result) {
-    echo json_encode([
-        "status" => "error",
-        "message" => mysqli_error($conn)
-    ]);
-    exit;
-}
 
-$students = [];
 
-while ($row = mysqli_fetch_assoc($result)) {
-    $students[] = $row;
-}
 
 echo json_encode([
     "status" => "success",
     "students" => $students
 ]);
-
+} catch (PDOException $e) {
+    echo json_encode([
+        "status" => "error",
+        "message" => $e->getMessage()
+    ]);
+}
 ?>
