@@ -1,14 +1,22 @@
 <?php
-include "../config/db.php";
+header("Content-Type: application/json");
+require_once "../config/db.php";
 
+try {
 $sql = "SELECT * FROM results ORDER BY date DESC";
-$result = mysqli_query($conn, $sql);
+$stmt = $conn->prepare($sql);
+    $stmt->execute();
 
-$data = [];
+$data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-while ($row = mysqli_fetch_assoc($result)) {
-    $data[] = $row;
-}
+echo json_encode([
+    "status" => "success",
+    "data" => $data
+]);
 
-echo json_encode($data);
+} catch (PDOException $e) {
+echo json_encode([
+        "status" => "error",
+        "message" => $e->getMessage()
+    ]); }
 ?>
