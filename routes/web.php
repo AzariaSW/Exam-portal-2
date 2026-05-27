@@ -30,32 +30,31 @@ function respond(array $data, int $status = 200): void {
     exit;
 }
 
-// --- AUTH (public) ---
+// AUTH (public) 
 if ($path === 'auth/login'    && $method === 'POST') respond((new AuthController())->login($input));
 if ($path === 'auth/register' && $method === 'POST') respond((new AuthController())->register($input));
 if ($path === 'auth/logout'   && $method === 'POST') respond((new AuthController())->logout());
 
-// --- ADMIN ---
+//  ADMIN 
 if ($path === 'admin/users'           && $method === 'GET')  respond((new AdminController())->getUsers());
 if ($path === 'admin/delete'          && $method === 'POST') respond((new AdminController())->deleteUser($input));
 if ($path === 'admin/approve-teacher' && $method === 'POST') respond((new AdminController())->approveTeacher($input));
 
-// --- TEACHER ---
+// TEACHER 
 if ($path === 'teacher/students' && $method === 'GET')  respond((new TeacherController())->getStudents());
 if ($path === 'teacher/approve'  && $method === 'POST') respond((new TeacherController())->approveStudent($input));
 
-// --- QUIZ ---
+// Exam/QUIZ 
 if ($path === 'quiz/create' && $method === 'POST') respond((new QuizController())->create($input));
 if ($path === 'quiz/list'   && $method === 'GET')  respond((new QuizController())->getAll());
 if ($path === 'quiz/upload' && $method === 'POST') respond((new QuizController())->upload($input));
 
-// --- RESULTS ---
+// RESULTS
 if ($path === 'results/save' && $method === 'POST') respond((new ResultController())->save($input));
 if ($path === 'results/list' && $method === 'GET')  respond((new ResultController())->getAll());
 
-// --- SETTINGS ---
+// SETTINGS 
 if ($path === 'settings/get'  && $method === 'GET')  respond((new SettingsController())->get());
 if ($path === 'settings/save' && $method === 'POST') respond((new SettingsController())->save($input));
 
-// --- 404 ---
 respond(['success' => false, 'message' => "Route not found: $path"], 404);
